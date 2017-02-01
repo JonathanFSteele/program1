@@ -76,6 +76,10 @@ private void readHTTPRequest(InputStream is)
          while (!r.ready()) Thread.sleep(1);
          line = r.readLine();
          System.err.println("Request line: ("+line+")");
+         if( line.startsWith("GET "))
+         {
+           System.err.println("GET LINE: ("+line+")");
+         }
          if (line.length()==0) break;
       } catch (Exception e) {
          System.err.println("Request error: "+e);
@@ -116,9 +120,31 @@ private void writeHTTPHeader(OutputStream os, String contentType) throws Excepti
 **/
 private void writeContent(OutputStream os) throws Exception
 {
-   os.write("<html><head></head><body>\n".getBytes());
-   os.write("<h3>Jon Waz Here!!!!!</h3>\n".getBytes());
-   os.write("</body></html>\n".getBytes());
+//  To Read a specific file and send it.
+    String filename = "res/test2.html";
+    BufferedReader br = new BufferedReader(new FileReader(filename));
+
+    try {
+        StringBuilder sb = new StringBuilder();
+        String line = br.readLine();
+
+        while (line != null) {
+            sb.append(line);
+            sb.append(System.lineSeparator());
+            line = br.readLine();
+        }
+        String fileContent = sb.toString();
+        os.write(fileContent.getBytes());
+    } catch(IOException e) {
+      }
+      finally {
+        br.close();
+    }
+
+//    To send hardcoded Data
+//    os.write("<html><head></head><body>\n".getBytes());
+//    os.write("<h3>Jon Waz Here!!!!!</h3>\n".getBytes());
+//    os.write("</body></html>\n".getBytes());
 }
 
 } // end class
