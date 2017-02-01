@@ -56,7 +56,7 @@ public void run()
       //readHTTPRequest(is);
       filePath = readHTTPRequest(is);
       System.err.println("FilePath = " + filePath);
-      writeHTTPHeader(os,"text/html");
+      writeHTTPHeader(os,"text/html", filePath);
       writeContent(os, filePath);
       os.flush();
       socket.close();
@@ -80,14 +80,18 @@ private String readHTTPRequest(InputStream is)
          while (!r.ready()) Thread.sleep(1);
          line = r.readLine();
          System.err.println("Request line: ("+line+")");
+
+         // If its the GET line of the HTTP header than grab just the url path of the file they are requesting.
          if( line.startsWith("GET "))
          {
            System.err.println("GET LINE: ("+line+")");
            String GetLineString = line.replace("GET /","");
            String[] Getline = GetLineString.split(" ");
            System.err.println("Getline[0]: " + Getline[0]);
+           // This assumes that there are no spaces in the name of the file. Additional processing would be necessary to handle spaces within the name.
            filePath = Getline[0];
          }
+
          if (line.length()==0) break;
       } catch (Exception e) {
          System.err.println("Request error: "+e);
@@ -102,23 +106,47 @@ private String readHTTPRequest(InputStream is)
 * @param os is the OutputStream object to write to
 * @param contentType is the string MIME content type (e.g. "text/html")
 **/
-private void writeHTTPHeader(OutputStream os, String contentType) throws Exception
+private void writeHTTPHeader(OutputStream os, String contentType, String filePath) throws Exception
 {
-   Date d = new Date();
-   DateFormat df = DateFormat.getDateTimeInstance();
-   df.setTimeZone(TimeZone.getTimeZone("GMT"));
-   os.write("HTTP/1.1 200 OK\n".getBytes());
-   os.write("Date: ".getBytes());
-   os.write((df.format(d)).getBytes());
-   os.write("\n".getBytes());
-   os.write("Server: Jon's very own server\n".getBytes());
-   //os.write("Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT\n".getBytes());
-   //os.write("Content-Length: 438\n".getBytes());
-   os.write("Connection: close\n".getBytes());
-   os.write("Content-Type: ".getBytes());
-   os.write(contentType.getBytes());
-   os.write("\n\n".getBytes()); // HTTP header ends with 2 newlines
-   return;
+    File f = new File(filePath);
+    if(f.exists() && !f.isDirectory()) {
+      Date d = new Date();
+      DateFormat df = DateFormat.getDateTimeInstance();
+      df.setTimeZone(TimeZone.getTimeZone("GMT"));
+      os.write("HTTP/1.1 200 OK\n".getBytes());
+      os.write("Date: ".getBytes());
+      os.write((df.format(d)).getBytes());
+      os.write("\n".getBytes());
+      os.write("Server: Jon's very own server\n".getBytes());
+      //os.write("Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT\n".getBytes());
+      //os.write("Content-Length: 438\n".getBytes());
+      os.write("Connection: close\n".getBytes());
+      os.write("Content-Type: ".getBytes());
+      os.write(contentType.getBytes());
+      os.write("\n\n".getBytes()); // HTTP header ends with 2 newlines
+      return;
+    }
+    else{
+      Date d = new Date();
+      DateFormat df = DateFormat.getDateTimeInstance();
+      df.setTimeZone(TimeZone.getTimeZone("GMT"));
+      os.write("HTTP/1.1 404 Not Found\n".getBytes());
+      os.write("Date: ".getBytes());
+      os.write((df.format(d)).getBytes());
+      os.write("\n".getBytes());
+      os.write("Server: Jon's very own server\n".getBytes());
+      //os.write("Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT\n".getBytes());
+      //os.write("Content-Length: 438\n".getBytes());
+      os.write("Connection: close\n".getBytes());
+      os.write("Content-Type: ".getBytes());
+      os.write(contentType.getBytes());
+      os.write("\n\n".getBytes()); // HTTP header ends with 2 newlines
+      //    To send hardcoded Data
+         os.write("<html><head><title>404 - File or directory not found.</title></head><body>\n".getBytes());
+         os.write("<h3>404 Not Found</h3>\n".getBytes());
+         os.write("</body></html>\n".getBytes());
+      return;
+    }
 }
 
 /**
@@ -128,25 +156,38 @@ private void writeHTTPHeader(OutputStream os, String contentType) throws Excepti
 **/
 private void writeContent(OutputStream os, String filePath) throws Exception
 {
-//  To Read a specific file and send it.
-    BufferedReader br = new BufferedReader(new FileReader(filePath));
-
+//  Reads the requested filePath and sends it back to the browser.
     try {
-        StringBuilder sb = new StringBuilder();
-        String line = br.readLine();
+      BufferedReader br = new BufferedReader(new FileReader(filePath));
 
-        while (line != null) {
-            sb.append(line);
-            sb.append(System.lineSeparator());
-            line = br.readLine();
+      try {
+          StringBuilder sb = new StringBuilder();
+          String line = br.readLine();
+
+          while (line != null) {
+              sb.append(line);
+              sb.append(System.lineSeparator());
+              line = br.readLine();
+          }
+          String fileContent = sb.toString();
+          Date d = new Date();
+          DateFormat df = DateFormat.getDateTimeInstance();
+          df.setTimeZone(TimeZone.getTimeZone("MST"));
+          fileContent = fileContent.replace("<cs371date>",df.format(d)); //Replace <cs371data> with the date
+          String server = "JFS Server";
+          fileContent = fileContent.replace("<cs371server>",server); //Replace <cs371server> with server name Tag
+          os.write(fileContent.getBytes());
+      } catch(IOException e) {
+        System.err.println("ERROR Reading file contents: "+e);
         }
-        String fileContent = sb.toString();
-        os.write(fileContent.getBytes());
-    } catch(IOException e) {
+        finally {
+          br.close();
       }
-      finally {
-        br.close();
+    } catch(IOException e) {
+      System.err.println("ERROR Reading File: "+e);
     }
+
+
 
 //    To send hardcoded Data
 //    os.write("<html><head></head><body>\n".getBytes());
