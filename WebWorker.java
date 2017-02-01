@@ -48,13 +48,16 @@ public WebWorker(Socket s)
 **/
 public void run()
 {
+   String filePath = "";
    System.err.println("Handling connection...");
    try {
       InputStream  is = socket.getInputStream();
       OutputStream os = socket.getOutputStream();
-      readHTTPRequest(is);
+      //readHTTPRequest(is);
+      filePath = readHTTPRequest(is);
+      System.err.println("FilePath = " + filePath);
       writeHTTPHeader(os,"text/html");
-      writeContent(os);
+      writeContent(os, filePath);
       os.flush();
       socket.close();
    } catch (Exception e) {
@@ -67,9 +70,10 @@ public void run()
 /**
 * Read the HTTP request header.
 **/
-private void readHTTPRequest(InputStream is)
+private String readHTTPRequest(InputStream is)
 {
    String line;
+   String filePath = "";
    BufferedReader r = new BufferedReader(new InputStreamReader(is));
    while (true) {
       try {
@@ -79,6 +83,10 @@ private void readHTTPRequest(InputStream is)
          if( line.startsWith("GET "))
          {
            System.err.println("GET LINE: ("+line+")");
+           String GetLineString = line.replace("GET /","");
+           String[] Getline = GetLineString.split(" ");
+           System.err.println("Getline[0]: " + Getline[0]);
+           filePath = Getline[0];
          }
          if (line.length()==0) break;
       } catch (Exception e) {
@@ -86,7 +94,7 @@ private void readHTTPRequest(InputStream is)
          break;
       }
    }
-   return;
+   return filePath;
 }
 
 /**
@@ -118,11 +126,10 @@ private void writeHTTPHeader(OutputStream os, String contentType) throws Excepti
 * be done after the HTTP header has been written out.
 * @param os is the OutputStream object to write to
 **/
-private void writeContent(OutputStream os) throws Exception
+private void writeContent(OutputStream os, String filePath) throws Exception
 {
 //  To Read a specific file and send it.
-    String filename = "res/test2.html";
-    BufferedReader br = new BufferedReader(new FileReader(filename));
+    BufferedReader br = new BufferedReader(new FileReader(filePath));
 
     try {
         StringBuilder sb = new StringBuilder();
