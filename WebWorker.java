@@ -3,12 +3,12 @@
 * to receive and respond to a single HTTP request. After the constructor
 * the object executes on its "run" method, and leaves when it is done.
 *
-* One WebWorker object is only responsible for one client connection. 
+* One WebWorker object is only responsible for one client connection.
 * This code uses Java threads to parallelize the handling of clients:
 * each WebWorker runs in its own thread. This means that you can essentially
-* just think about what is happening on one client at a time, ignoring 
+* just think about what is happening on one client at a time, ignoring
 * the fact that the entirety of the webserver execution might be handling
-* other clients, too. 
+* other clients, too.
 *
 * This WebWorker class (i.e., an object of this class) is where all the
 * client interaction is done. The "run()" method is the beginning -- think
@@ -16,7 +16,7 @@
 * a row, invoking three methods in this class: it reads the incoming HTTP
 * request; it writes out an HTTP header to begin its response, and then it
 * writes out some HTML content for the response content. HTTP requests and
-* responses are just lines of text (in a very particular format). 
+* responses are just lines of text (in a very particular format).
 *
 **/
 
@@ -41,7 +41,7 @@ public WebWorker(Socket s)
 }
 
 /**
-* Worker thread starting point. Each worker handles just one HTTP 
+* Worker thread starting point. Each worker handles just one HTTP
 * request and then returns, which destroys the thread. This method
 * assumes that whoever created the worker created it with a valid
 * open socket object.
@@ -101,7 +101,7 @@ private void writeHTTPHeader(OutputStream os, String contentType) throws Excepti
    os.write("\n".getBytes());
    os.write("Server: Jon's very own server\n".getBytes());
    //os.write("Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT\n".getBytes());
-   //os.write("Content-Length: 438\n".getBytes()); 
+   //os.write("Content-Length: 438\n".getBytes());
    os.write("Connection: close\n".getBytes());
    os.write("Content-Type: ".getBytes());
    os.write(contentType.getBytes());
@@ -117,7 +117,7 @@ private void writeHTTPHeader(OutputStream os, String contentType) throws Excepti
 private void writeContent(OutputStream os) throws Exception
 {
    os.write("<html><head></head><body>\n".getBytes());
-   os.write("<h3>My web server works!</h3>\n".getBytes());
+   os.write("<h3>Jon Waz Here!!!!!</h3>\n".getBytes());
    os.write("</body></html>\n".getBytes());
 }
 

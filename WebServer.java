@@ -3,15 +3,15 @@
 * connection, so all the WebServer object does is listen on the port
 * for incoming client connection requests.
 *
-* This class contains the application "main()" (see below). At startup, 
+* This class contains the application "main()" (see below). At startup,
 * main() creates an object of this class (WebServer) and invokes its
-* start() method. Since servers run continually, the start() method 
+* start() method. Since servers run continually, the start() method
 * never returns. It uses socket programming to listen for client network
 * connection requests. When one happens, it creates a new object of
 * the WebWorker class and hands that client connection off to the WebWorker
 * object. The WebServer object then just keeps listening for new client
 * connections. See the WebWorker source for more information about it.
-* 
+*
 **/
 
 import java.net.*;
@@ -94,4 +94,3 @@ public static void main(String args[])
 } // end main
 
 } // end class
-

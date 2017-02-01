@@ -1,0 +1,8 @@
+<project name="program1" default="compile">
+
+    <target name="compile">
+        <mkdir dir="."/>
+        <javac srcdir="." destdir="." includeantruntime="false"/>
+    </target>
+
+</project>
