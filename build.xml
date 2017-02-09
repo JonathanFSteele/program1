@@ -5,4 +5,10 @@
         <javac srcdir="." destdir="." includeantruntime="false"/>
     </target>
 
+    <target name="run">
+        <mkdir dir="."/>
+        <javac srcdir="." destdir="test" includeantruntime="false"/>
+        <java classname="WebServer" classpath="test" fork="true"/>
+    </target>
+
 </project>

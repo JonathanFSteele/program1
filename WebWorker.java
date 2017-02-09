@@ -26,6 +26,14 @@ import java.io.*;
 import java.util.Date;
 import java.text.DateFormat;
 import java.util.TimeZone;
+import java.io.File;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import javax.imageio.ImageIO;
+import javax.xml.bind.DatatypeConverter;
 
 public class WebWorker implements Runnable
 {
@@ -55,9 +63,26 @@ public void run()
       OutputStream os = socket.getOutputStream();
       //readHTTPRequest(is);
       filePath = readHTTPRequest(is);
-      System.err.println("FilePath = " + filePath);
-      writeHTTPHeader(os,"text/html", filePath);
-      writeContent(os, filePath);
+      System.out.println("FilePath = " + filePath);
+      String MimeType = "text/html";
+      File f = new File(filePath);
+      String extension = "";
+      if(f.exists() && !f.isDirectory()) {
+        extension = getFileExtension(f);
+        System.out.println("extension: "+extension);
+        if(extension.equals("png")) MimeType = "image/png";
+        else if (extension.equals("jpg")) MimeType = "image/jpg";
+        else if (extension.equals("gif")) MimeType = "image/gif";
+      }
+
+      writeHTTPHeader(os,MimeType, filePath);
+      if((extension.equals("png"))||(extension.equals("jpg"))||(extension.equals("gif")))
+      {
+        writeImageContent(os, filePath, extension);
+      }
+      else{
+        writeStringContent(os, filePath);
+      }
       os.flush();
       socket.close();
    } catch (Exception e) {
@@ -108,23 +133,25 @@ private String readHTTPRequest(InputStream is)
 **/
 private void writeHTTPHeader(OutputStream os, String contentType, String filePath) throws Exception
 {
+    System.out.println("ContentType: "+contentType);
     File f = new File(filePath);
     if(f.exists() && !f.isDirectory()) {
-      Date d = new Date();
-      DateFormat df = DateFormat.getDateTimeInstance();
-      df.setTimeZone(TimeZone.getTimeZone("GMT"));
-      os.write("HTTP/1.1 200 OK\n".getBytes());
-      os.write("Date: ".getBytes());
-      os.write((df.format(d)).getBytes());
-      os.write("\n".getBytes());
-      os.write("Server: Jon's very own server\n".getBytes());
-      //os.write("Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT\n".getBytes());
-      //os.write("Content-Length: 438\n".getBytes());
-      os.write("Connection: close\n".getBytes());
-      os.write("Content-Type: ".getBytes());
-      os.write(contentType.getBytes());
-      os.write("\n\n".getBytes()); // HTTP header ends with 2 newlines
-      return;
+        Date d = new Date();
+        DateFormat df = DateFormat.getDateTimeInstance();
+        df.setTimeZone(TimeZone.getTimeZone("GMT"));
+        os.write("HTTP/1.1 200 OK\n".getBytes());
+        os.write("Date: ".getBytes());
+        os.write((df.format(d)).getBytes());
+        os.write("\n".getBytes());
+        os.write("Server: Jon's very own server\n".getBytes());
+        //os.write("Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT\n".getBytes());
+        //os.write("Content-Length: 438\n".getBytes());
+        os.write("Connection: close\n".getBytes());
+        os.write("Content-Type: ".getBytes());
+        os.write(contentType.getBytes());
+        os.write("\n\n".getBytes()); // HTTP header ends with 2 newlines
+        return;
+      //}
     }
     else{
       Date d = new Date();
@@ -149,12 +176,19 @@ private void writeHTTPHeader(OutputStream os, String contentType, String filePat
     }
 }
 
+private static String getFileExtension(File file) {
+    String fileName = file.getName();
+    if(fileName.lastIndexOf(".") != -1 && fileName.lastIndexOf(".") != 0)
+    return fileName.substring(fileName.lastIndexOf(".")+1);
+    else return "";
+}
+
 /**
 * Write the data content to the client network connection. This MUST
 * be done after the HTTP header has been written out.
 * @param os is the OutputStream object to write to
 **/
-private void writeContent(OutputStream os, String filePath) throws Exception
+private void writeStringContent(OutputStream os, String filePath) throws Exception
 {
 //  Reads the requested filePath and sends it back to the browser.
     try {
@@ -173,9 +207,9 @@ private void writeContent(OutputStream os, String filePath) throws Exception
           Date d = new Date();
           DateFormat df = DateFormat.getDateTimeInstance();
           df.setTimeZone(TimeZone.getTimeZone("MST"));
-          fileContent = fileContent.replace("<cs371date>",df.format(d)); //Replace <cs371data> with the date
+          fileContent = fileContent.replace("<cs371date>",df.format(d)); //Replace fileC
           String server = "JFS Server";
-          fileContent = fileContent.replace("<cs371server>",server); //Replace <cs371server> with server name Tag
+          fileContent = fileContent.replace("<cs371server>",server);
           os.write(fileContent.getBytes());
       } catch(IOException e) {
         System.err.println("ERROR Reading file contents: "+e);
@@ -186,13 +220,36 @@ private void writeContent(OutputStream os, String filePath) throws Exception
     } catch(IOException e) {
       System.err.println("ERROR Reading File: "+e);
     }
+}
 
+private void writeImageContent(OutputStream os, String filePath, String extension) throws Exception{
 
+        System.out.println("filePath: "+filePath);
+        byte[] imageInByte;
+        BufferedImage originalImage = ImageIO.read(new File(filePath));
 
-//    To send hardcoded Data
-//    os.write("<html><head></head><body>\n".getBytes());
-//    os.write("<h3>Jon Waz Here!!!!!</h3>\n".getBytes());
-//    os.write("</body></html>\n".getBytes());
+        // convert BufferedImage to byte array
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        String encodedImage = DatatypeConverter.printBase64Binary(baos.toByteArray());
+        //String encodedImage = Base64.encode(baos.toByteArray());
+        System.out.println("extension:"+extension);
+        ImageIO.write(originalImage, extension, baos);
+        baos.flush();
+        imageInByte = baos.toByteArray();
+
+        os.write(imageInByte);
+
+        baos.close();
+
+        // convert byte array back to BufferedImage
+        // InputStream in = new ByteArrayInputStream(imageInByte);
+        // BufferedImage bImageFromConvert = ImageIO.read(in);
+        //ImageIO.write(bImageFromConvert, "png", new File("images/tinyking.png"));
+
+  //    To send hardcoded Data
+  //    os.write("<html><head></head><body>\n".getBytes());
+  //    os.write("<h3>Jon Waz Here!!!!!</h3>\n".getBytes());
+  //    os.write("</body></html>\n".getBytes());
 }
 
 } // end class
