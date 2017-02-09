@@ -73,10 +73,11 @@ public void run()
         if(extension.equals("png")) MimeType = "image/png";
         else if (extension.equals("jpg")) MimeType = "image/jpg";
         else if (extension.equals("gif")) MimeType = "image/gif";
+        else if (extension.equals("ico")) MimeType = "image/x-icon";
       }
 
       writeHTTPHeader(os,MimeType, filePath);
-      if((extension.equals("png"))||(extension.equals("jpg"))||(extension.equals("gif")))
+      if((extension.equals("png"))||(extension.equals("jpg"))||(extension.equals("gif"))||(extension.equals("ico")))
       {
         writeImageContent(os, filePath, extension);
       }
@@ -138,7 +139,7 @@ private void writeHTTPHeader(OutputStream os, String contentType, String filePat
     if(f.exists() && !f.isDirectory()) {
         Date d = new Date();
         DateFormat df = DateFormat.getDateTimeInstance();
-        df.setTimeZone(TimeZone.getTimeZone("GMT"));
+        df.setTimeZone(TimeZone.getTimeZone("MST"));
         os.write("HTTP/1.1 200 OK\n".getBytes());
         os.write("Date: ".getBytes());
         os.write((df.format(d)).getBytes());
@@ -156,7 +157,7 @@ private void writeHTTPHeader(OutputStream os, String contentType, String filePat
     else{
       Date d = new Date();
       DateFormat df = DateFormat.getDateTimeInstance();
-      df.setTimeZone(TimeZone.getTimeZone("GMT"));
+      df.setTimeZone(TimeZone.getTimeZone("MST"));
       os.write("HTTP/1.1 404 Not Found\n".getBytes());
       os.write("Date: ".getBytes());
       os.write((df.format(d)).getBytes());
