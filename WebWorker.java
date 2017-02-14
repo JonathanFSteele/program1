@@ -23,17 +23,19 @@
 import java.net.Socket;
 import java.lang.Runnable;
 import java.io.*;
-import java.util.Date;
+import java.util.*;
+//import java.util.Date;
 import java.text.DateFormat;
-import java.util.TimeZone;
-import java.io.File;
+//import java.util.TimeZone;
+//import java.io.File;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+//import java.io.ByteArrayInputStream;
+//import java.io.ByteArrayOutputStream;
+//import java.io.IOException;
+//import java.io.InputStream;
 import javax.imageio.ImageIO;
 import javax.xml.bind.DatatypeConverter;
+//import net.sf.image4j.*;
 
 public class WebWorker implements Runnable
 {
@@ -225,22 +227,27 @@ private void writeStringContent(OutputStream os, String filePath) throws Excepti
 
 private void writeImageContent(OutputStream os, String filePath, String extension) throws Exception{
 
-        System.out.println("filePath: "+filePath);
-        byte[] imageInByte;
-        BufferedImage originalImage = ImageIO.read(new File(filePath));
+  System.out.println("ICO: write image content, filePath: "+filePath);
+  byte[] imageInByte;
+  System.out.println("ICO: trying to read FileInputStream image: "+filePath);
 
-        // convert BufferedImage to byte array
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        String encodedImage = DatatypeConverter.printBase64Binary(baos.toByteArray());
-        //String encodedImage = Base64.encode(baos.toByteArray());
-        System.out.println("extension:"+extension);
-        ImageIO.write(originalImage, extension, baos);
-        baos.flush();
-        imageInByte = baos.toByteArray();
+  //InputStream is;
 
-        os.write(imageInByte);
+  String fromFileName = filePath;
+  //String toFileName = "favicon.ico";
 
-        baos.close();
+  BufferedInputStream in = new BufferedInputStream(new FileInputStream(fromFileName));
+  //BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(toFileName));
+
+  byte[] buff = new byte[32 * 1024];
+  int len = 0;
+  while((len = in.read(buff)) > 0)
+  {
+    //out.write(buff, 0, len);
+    os.write(buff);
+  }
+  in.close();
+        //List<BufferedImage> image = ICODecoder.read(new File("input.ico"));
 
         // convert byte array back to BufferedImage
         // InputStream in = new ByteArrayInputStream(imageInByte);
